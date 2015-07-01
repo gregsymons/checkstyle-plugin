@@ -1,6 +1,13 @@
 package hudson.plugins.checkstyle;
 
+import java.util.Collection;
+import java.util.Collections;
+
+import jenkins.tasks.SimpleBuildStep;
+
 import hudson.model.AbstractBuild;
+import hudson.model.Action;
+import hudson.model.Run;
 import hudson.plugins.analysis.core.AbstractResultAction;
 import hudson.plugins.analysis.core.HealthDescriptor;
 import hudson.plugins.analysis.core.PluginDescriptor;
@@ -16,18 +23,17 @@ import hudson.plugins.analysis.core.PluginDescriptor;
  *
  * @author Ulli Hafner
  */
-public class CheckStyleResultAction extends AbstractResultAction<CheckStyleResult> {
+public class CheckStyleResultAction extends AbstractResultAction<CheckStyleResult> implements SimpleBuildStep.LastBuildAction
+{
     /**
      * Creates a new instance of <code>CheckStyleResultAction</code>.
-     *
-     * @param owner
+     *  @param owner
      *            the associated build of this action
      * @param healthDescriptor
      *            health descriptor
      * @param result
-     *            the result in this build
      */
-    public CheckStyleResultAction(final AbstractBuild<?, ?> owner, final HealthDescriptor healthDescriptor, final CheckStyleResult result) {
+    public CheckStyleResultAction(final Run<?, ?> owner, final HealthDescriptor healthDescriptor, final CheckStyleResult result) {
         super(owner, new CheckStyleHealthDescriptor(healthDescriptor), result);
     }
 
@@ -39,5 +45,10 @@ public class CheckStyleResultAction extends AbstractResultAction<CheckStyleResul
     @Override
     protected PluginDescriptor getDescriptor() {
         return new CheckStyleDescriptor();
+    }
+
+    @Override
+    public Collection<? extends Action> getProjectActions() {
+        return Collections.singleton(new CheckStyleProjectAction(getOwner().getParent(), CheckStyleResultAction.class));
     }
 }

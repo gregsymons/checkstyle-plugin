@@ -1,6 +1,7 @@
 package hudson.plugins.checkstyle;
 
 import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.plugins.analysis.core.ResultAction;
 import hudson.plugins.analysis.core.AbstractProjectAction;
 
@@ -29,7 +30,7 @@ public class CheckStyleProjectAction extends AbstractProjectAction<ResultAction<
      * @param type
      *            the result action type
      */
-    public CheckStyleProjectAction(final AbstractProject<?, ?> project,
+    public CheckStyleProjectAction(final Job<?, ?> project,
             final Class<? extends ResultAction<CheckStyleResult>> type) {
         super(project, type, Messages._Checkstyle_ProjectAction_Name(), Messages._Checkstyle_Trend_Name(),
                 CheckStyleDescriptor.PLUGIN_ID, CheckStyleDescriptor.ICON_URL, CheckStyleDescriptor.RESULT_URL);

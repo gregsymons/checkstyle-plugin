@@ -5,13 +5,15 @@ import java.io.IOException;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.MatrixAggregator;
 import hudson.matrix.MatrixBuild;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.plugins.analysis.core.BuildResult;
 import hudson.plugins.analysis.core.FilesParser;
 import hudson.plugins.analysis.core.HealthAwarePublisher;
@@ -33,7 +35,7 @@ public class CheckStylePublisher extends HealthAwarePublisher {
     /** Default Checkstyle pattern. */
     private static final String DEFAULT_PATTERN = "**/checkstyle-result.xml";
     /** Ant file-set pattern of files to work with. */
-    private final String pattern;
+    private String pattern = DEFAULT_PATTERN;
 
     /**
      * Creates a new instance of <code>CheckstylePublisher</code>.
@@ -101,7 +103,6 @@ public class CheckStylePublisher extends HealthAwarePublisher {
      */
     // CHECKSTYLE:OFF
     @SuppressWarnings("PMD.ExcessiveParameterList")
-    @DataBoundConstructor
     public CheckStylePublisher(final String healthy, final String unHealthy, final String thresholdLimit,
             final String defaultEncoding, final boolean useDeltaValues,
             final String unstableTotalAll, final String unstableTotalHigh, final String unstableTotalNormal, final String unstableTotalLow,
@@ -121,6 +122,13 @@ public class CheckStylePublisher extends HealthAwarePublisher {
     }
     // CHECKSTYLE:ON
 
+    @DataBoundConstructor
+    public CheckStylePublisher(final String pattern) {
+        super(PLUGIN_NAME);
+        this.setCanResolveRelativePaths(false);
+        this.pattern = pattern;
+    }
+
     /**
      * Returns the Ant file-set pattern of files to work with.
      *
@@ -136,13 +144,13 @@ public class CheckStylePublisher extends HealthAwarePublisher {
     }
 
     @Override
-    public BuildResult perform(final AbstractBuild<?, ?> build, final PluginLogger logger) throws InterruptedException, IOException {
+    public BuildResult perform(final Run<?, ?> build, final FilePath workspace, final TaskListener listener, final PluginLogger logger) throws InterruptedException, IOException {
         logger.log("Collecting checkstyle analysis files...");
 
         FilesParser parser = new FilesParser(PLUGIN_NAME, StringUtils.defaultIfEmpty(getPattern(), DEFAULT_PATTERN),
                 new CheckStyleParser(getDefaultEncoding()),
                 shouldDetectModules(), isMavenBuild(build));
-        ParserResult project = build.getWorkspace().act(parser);
+        ParserResult project = workspace.act(parser);
         logger.logLines(project.getLogMessages());
 
         CheckStyleResult result = new CheckStyleResult(build, getDefaultEncoding(), project,
